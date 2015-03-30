@@ -8,9 +8,7 @@ build_linux_mainline() {
 	[ -f ../$OUTPUT_DIR/zImage ] && echo " already exists" && popd && return;
 	echo "no u-boot.  Proceeding with building"
 	
-
-
-	#[ ! -z .config ] && cp ../config/linux-sunxi-next.config.txt .config
+	[ ! -e .config ] && cp ../config/linux-sunxi-next.config.txt .config
 
 	make -j5 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
 	make -j5 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- all zImage modules_prepare
