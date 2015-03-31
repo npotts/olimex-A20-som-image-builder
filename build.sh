@@ -11,6 +11,7 @@ done
 prep #setup needed output folder, etc
 
 
-build_uboot
-build_sunxitools
-build_linux_mainline
+#build_uboot
+#build_sunxitools
+#build_linux_mainline
+make_format
