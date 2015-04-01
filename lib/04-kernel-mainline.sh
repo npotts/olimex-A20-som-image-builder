@@ -3,21 +3,36 @@
 # it will build for A20-OLinuXino-Lime2_defconfig
 build_linux_mainline() { 
 	#builds uboot from sources Submodule of repo is https://github.com/RobertCNelson/u-boot
-	pushd linux-mainline
-	echo -n "Checking for Kernel ..."
-	[ -f ../$OUTPUT_DIR/zImage ] && echo " already exists" && popd && return;
-	echo "no u-boot.  Proceeding with building"
+	pushd linux-mainline &> /dev/null
+	echo -n "*********************** linux-mainline checking if we need to build: "
+	[ -f ../$OUTPUT_DIR/zImage ] && echo " nope" && popd && return;
+	echo "yep. "
 	
 	[ ! -e .config ] && cp ../config/linux-sunxi-next.config.txt .config
 
+	echo "*********************** linux: Configurating"
+	echo "*********************** linux: Configurating" > ../$OUTPUT_DIR/kernel.log
 	make -j5 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
-	make -j5 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- all zImage modules_prepare
+	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
 
-	fakeroot make -j1 deb-pkg KDEB_PKGVERSION=1.5 LOCALVERSION=-lime2 KBUILD_DEBARCH=armhf ARCH=arm 'DEBFULLNAME=npotts' DEBEMAIL=npotts@some-domain.tld CROSS_COMPILE=arm-linux-gnueabihf-
 
-	cp arch/arm/boot/zImage ../$OUTPUT_DIR/zImage
-	cp -rv *deb ../*deb $OUTPUT_DIR
-	tar -cPf ../$OUTPUT_DIR/kernel/4.0.0-rc4-lime2-next.tar *.deb ../*.deb
+	echo "*********************** linux: Building"
+	echo "*********************** linux: Building" >> ../$OUTPUT_DIR/kernel.log
+	make -j5 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- all zImage modules_prepare &>> ../$OUTPUT_DIR/kernel.log
+	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
 
-	popd
+
+	echo "*********************** linux: packaging"
+	echo "*********************** linux: packaging" >> ../$OUTPUT_DIR/kernel.log
+	make -j1 deb-pkg KDEB_PKGVERSION=1.5 LOCALVERSION=-lime2 KBUILD_DEBARCH=armhf ARCH=arm 'DEBFULLNAME=npotts' DEBEMAIL=npotts@some-domain.tld CROSS_COMPILE=arm-linux-gnueabihf- &>> ../$OUTPUT_DIR/kernel.log
+	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
+
+
+	echo "*********************** linux: copying products to output" 
+	echo "*********************** linux: copying products to output" >> ../$OUTPUT_DIR/kernel.log
+	cp arch/arm/boot/zImage ../$OUTPUT_DIR/zImage &>> ../$OUTPUT_DIR/kernel.log
+	mv *deb ../*deb $OUTPUT_DIR &>> ../$OUTPUT_DIR/kernel.log
+	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
+	# tar -cPf ../$OUTPUT_DIR/kernel/4.0.0-rc4-lime2-next.tar *.deb ../*.deb
+	popd &> /dev/null
 }
