@@ -1,0 +1,73 @@
+#!/bin/bash 
+
+echo "*********************** In chroot running system-builder"
+
+echo "*********************** apt-get update"
+apt-get -y update
+
+echo "*********************** creating vtty's"
+if [ -e /etc/inittab ]; then
+	echo "*********************** fixing init"
+	sed -e 's/1:2345:respawn:\/sbin\/getty 38400 tty1/1:2345:respawn:\/sbin\/getty --noclear 38400 tty1/g' -i /etc/inittab
+	sed -e s/3:23:respawn/#3:23:respawn/g -i /etc/inittab
+	sed -e s/4:23:respawn/#4:23:respawn/g -i /etc/inittab
+	sed -e s/5:23:respawn/#5:23:respawn/g -i /etc/inittab
+	sed -e s/6:23:respawn/#6:23:respawn/g -i /etc/inittab
+	echo T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100 >> /etc/inittab
+fi
+if [ -e /etc/systemd ];  then
+	echo "*********************** fixing systemd"
+	#systemd madness. We have this problem:  https://github.com/igorpecovnik/lib/issues/33, so this is a workaround
+	cp /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyS0.service
+	sed -e s/"--keep-baud 115200,38400,9600"/"-L 115200"/g  -i /etc/systemd/system/getty.target.wants/serial-getty@ttyS0.service
+	#sudo chroot $FAKEROOT /bin/bash -c 'ln -s /etc/systemd/system/serial-getty@ttyS0.service /etc/systemd/system/getty.target.wants'
+	#systemctl daemon-reload
+	#systemctl start serial-getty@ttyS0.service
+fi
+
+
+echo "*********************** Installing Locales"
+LC_ALL=C LANGUAGE=C LANG=C apt-get -y -qq install locales
+sed -i 's/^# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
+locale-gen en_US.UTF-8
+LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive  LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_MESSAGES=POSIX update-locale
+
+echo "*********************** Installing Some other packages"
+apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm  htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux
+
+echo "*********************** Setting Timezone to UTC"
+cp /usr/share/zoneinfo/UTC /etc/localtime
+
+echo "*********************** Set password"
+/bin/bash -c '(echo 1234;echo 1234;) | passwd root'
+#/bin/bash -c 'chage -d 0 root' #uncomment to make the password age immediately
+
+echo "*********************** Set fstab"
+echo '/dev/mmcblk0p1  /           ext4    defaults,noatime,nodiratime,data=writeback,commit=600,errors=remount-ro        0       0' > /etc/fstab
+
+echo "*********************** Enable interupts on core 2"
+echo 'echo 2 > /proc/irq/\$(cat /proc/interrupts | grep eth0 | cut -f 1 -d ":" | tr -d " ")/smp_affinity' >> /etc/rc.local
+sed -i s/'exit 0'//g /etc/rc.local
+
+
+echo "*********************** Set hostname"
+echo a20som > /etc/hostname
+
+echo "*********************** creating /etc/hosts"
+echo 127.0.0.1   localhost a20som > /etc/hosts
+echo ::1         localhost a20som ip6-localhost ip6-loopback >> /etc/hosts
+echo fe00::0     ip6-localnet >> /etc/hosts
+echo ff00::0     ip6-mcastprefix >> /etc/hosts
+echo ff02::1     ip6-allnodes >> /etc/hosts
+echo ff02::2     ip6-allrouters >> /etc/hosts
+
+
+echo "*********************** Installing Kernel"
+dpkg -i /tmp/*.deb
+cd /usr/src/linux-headers-4.0.0-rc4-lime2 && make scripts
+
+
+echo "*********************** configuring Autoload modules"
+echo 'hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i' > /etc/modules
+
+

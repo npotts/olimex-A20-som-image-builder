@@ -16,6 +16,7 @@ build_linux_mainline() {
 	fakeroot make -j1 deb-pkg KDEB_PKGVERSION=1.5 LOCALVERSION=-lime2 KBUILD_DEBARCH=armhf ARCH=arm 'DEBFULLNAME=npotts' DEBEMAIL=npotts@some-domain.tld CROSS_COMPILE=arm-linux-gnueabihf-
 
 	cp arch/arm/boot/zImage ../$OUTPUT_DIR/zImage
+	cp -rv *deb ../*deb $OUTPUT_DIR
 	tar -cPf ../$OUTPUT_DIR/kernel/4.0.0-rc4-lime2-next.tar *.deb ../*.deb
 
 	popd
