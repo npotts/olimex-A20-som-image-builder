@@ -17,16 +17,35 @@ mount_chroot_env() {
 	echo "*********************** chroot mounted"
 }
 
+dirty_unmount_chroot_env() {
+	#this is nasty
+	echo "*********************** This can be a nasty..."
+	sudo fuser -k $FAKEROOT/sys
+	sudo fuser -k $FAKEROOT/proc
+	sudo fuser -k $FAKEROOT/pts
+	sudo fuser -k $FAKEROOT/dev
+	sudo fuser -k $FAKEROOT
+	sudo umount $FAKEROOT/{sys,proc,pts,dev}  /dev/loop0
+	sudo umount /dev/loop0
+	sudo losetup -d /dev/loop0
+	echo "*********************** Ok.  ALl better now"
+}
 unmount_chroot_env() {
+	sync
 	echo "*********************** Unmounting chroot"
+	sudo fuser -k $FAKEROOT/sys
+	sudo fuser -k $FAKEROOT/proc
+	sudo fuser -k $FAKEROOT/pts
+	sudo fuser -k $FAKEROOT/dev
+	sudo fuser -k $FAKEROOT
 	sudo umount $FAKEROOT/sys
 	[ ! $? -eq 0 ] && echo "Unable to unmount sys" && exit
 	sudo umount $FAKEROOT/proc
 	[ ! $? -eq 0 ] && echo "Unable to unmount proc" && exit
-	sudo umount $FAKEROOT/dev
-	[ ! $? -eq 0 ] && echo "Unable to unmount dev" && exit
 	sudo umount $FAKEROOT/pts
 	[ ! $? -eq 0 ] && echo "Unable to unmount pts" && exit
+	sudo umount $FAKEROOT/dev
+	[ ! $? -eq 0 ] && echo "Unable to unmount dev" && exit
 	sudo umount /dev/loop0
 	[ ! $? -eq 0 ] && echo "Unable to unmount /dev/loop0" && exit
 	sudo losetup -d /dev/loop0

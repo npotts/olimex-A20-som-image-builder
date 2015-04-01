@@ -4,6 +4,7 @@ echo "*********************** In chroot running system-builder"
 
 echo "*********************** apt-get update"
 apt-get -y update
+[ ! $? -eq 0 ] && echo "Unable to get updates" && exit
 
 echo "*********************** creating vtty's"
 if [ -e /etc/inittab ]; then
@@ -28,12 +29,14 @@ fi
 
 echo "*********************** Installing Locales"
 LC_ALL=C LANGUAGE=C LANG=C apt-get -y -qq install locales
+[ ! $? -eq 0 ] && echo "Unable to install locales" && exit
 sed -i 's/^# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
 locale-gen en_US.UTF-8
 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive  LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_MESSAGES=POSIX update-locale
 
 echo "*********************** Installing Some other packages"
-apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm  htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux
+apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server ntp
+[ ! $? -eq 0 ] && echo "Unable to install base software set" && exit
 
 echo "*********************** Setting Timezone to UTC"
 cp /usr/share/zoneinfo/UTC /etc/localtime
