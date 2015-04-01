@@ -5,7 +5,7 @@ build_uboot() {
 	#builds uboot from sources Submodule of repo is https://github.com/RobertCNelson/u-boot
 	pushd u-boot &> /dev/null
 	echo -n "*********************** Checking if we need to build u-boot: "
-	[ -f ../$OUTPUT_DIR/u-boot_4.0.0-rc4.tgz ] && echo " nope" && popd && return;
+	[ -f ../$OUTPUT_DIR/u-boot-sunxi-with-spl.bin ] && echo " nope" && popd && return;
 	echo "yep."
 	
 	echo "*********************** uboot: Cleaning"
@@ -23,7 +23,7 @@ build_uboot() {
 	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
 	echo "*********************** uboot: Packaging"
 	#package it
-	tar cPfz ../$OUTPUT_DIR/u-boot_4.0.0-rc4.tgz u-boot-sunxi-with-spl.bin &>> ../$OUTPUT_DIR/u-boot.log
+	cp u-boot-sunxi-with-spl.bin ../$OUTPUT_DIR &>> ../$OUTPUT_DIR/u-boot.log
 	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
 	echo "*********************** uboot: Done"
 	popd &> /dev/null
