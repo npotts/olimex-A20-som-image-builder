@@ -1,0 +1,18 @@
+#!/bin/bash
+
+MAKE_PROCS="-j5"
+CROSS_PREFIX=arm-linux-gnueabihf-
+OUTPUT_DIR="output"
+FAKEROOT="${OUTPUT_DIR}/sdcard"
+ROOT_IMG="${OUTPUT_DIR}/rootfs.img"
+
+for i in $(ls lib/*.sh); do
+	source $i
+done
+
+
+dirty_unmount_chroot_env
+mount_chroot_env
+echo "Type exit when you are all done"
+sudo LC_ALL=C LANGUAGE=C LANG=C chroot $FAKEROOT /bin/bash
+unmount_chroot_env
