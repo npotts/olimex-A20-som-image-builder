@@ -8,7 +8,7 @@ build_linux_mainline() {
 	[ -f ../$OUTPUT_DIR/zImage ] && echo " nope" && popd && return;
 	echo "yep. "
 	
-	[ ! -e .config ] && cp ../config/linux-sunxi-next.config.txt .config
+	[ ! -e .config ] && echo "*********************** linux: Getting Stock Config" && cp ../config/linux-sunxi-next.config.txt .config
 
 	echo "*********************** linux: Configurating"
 	echo "*********************** linux: Configurating" > ../$OUTPUT_DIR/kernel.log
@@ -31,8 +31,7 @@ build_linux_mainline() {
 	echo "*********************** linux: copying products to output" 
 	echo "*********************** linux: copying products to output" >> ../$OUTPUT_DIR/kernel.log
 	cp arch/arm/boot/zImage ../$OUTPUT_DIR/zImage &>> ../$OUTPUT_DIR/kernel.log
-	mv *deb ../*deb $OUTPUT_DIR &>> ../$OUTPUT_DIR/kernel.log
+	mv ../*deb ../$OUTPUT_DIR &>> ../$OUTPUT_DIR/kernel.log
 	[ ! $? -eq 0 ] && echo "FAILED!!!!!!" && exit
-	# tar -cPf ../$OUTPUT_DIR/kernel/4.0.0-rc4-lime2-next.tar *.deb ../*.deb
 	popd &> /dev/null
 }
