@@ -24,10 +24,10 @@ unmount_chroot_env() {
 	echo " ok"
 }
 
-packages_install() {
+chroot_install() {
+
 	mount_chroot_env
 
-	#put int some default source lists
 	echo "*********************** Creating default source list"
 	sudo cp $OUTPUT_DIR/../configs/sources.list $FAKEROOT/etc/apt/sources.list
 
@@ -39,8 +39,8 @@ packages_install() {
 	sudo cp $OUTPUT_DIR/ssh_host_dsa_key $OUTPUT_DIR/ssh_host_rsa_key $OUTPUT_DIR/ssh_host_ecdsa_key $FAKEROOT/etc/ssh/
 
 
-	echo "*********************** Copying Kernel debs into the image"
-	sudo cp -fr $OUTPUT_DIR/*deb $FAKEROOT/tmp
+	echo "*********************** Copying Needed files to chroot's /tmp"
+	sudo cp -fr $OUTPUT_DIR/*deb config/boot-next.cmd config/firmware.zip $FAKEROOT/tmp
 
 	echo "*********************** Copying in system-builder script"
 	sudo cp $OUTPUT_DIR/../libs/system-builder $FAKEROOT/root
@@ -53,13 +53,15 @@ packages_install() {
 	unmount_chroot_env
 }
 
-make_format() {
-	echo "*********************** Making Disk Image"
+make_rootfs() {
+	echo "*********************** Making Rootfs Image"
 	rm -fr $ROOT_IMG
   	sync
+  	echo "*********************** Creating image file"
 	dd if=/dev/zero of=$ROOT_IMG bs=1M count=2000 status=noxfer
 
 	#two EXT4 mounts
+	echo "*********************** Partitioning"
 	sudo losetup /dev/loop0 $ROOT_IMG
 	sudo parted -s /dev/loop0 -- mklabel msdos
 	sudo parted -s /dev/loop0 -- mkpart primary ext4 2048s -1s
@@ -85,6 +87,11 @@ make_format() {
 	sudo umount /dev/loop0
 	sudo losetup -d /dev/loop0
 
+	echo "*********************** Installing u-boot at the bootloader"
+	sudo losetup /dev/loop0 $ROOT_IMG
+	dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=/dev/loop1 bs=1024 seek=8 status=noxfer
+	sudo losetup -d /dev/loop0
+
 	mount_chroot_env
 	echo "*********************** debootstrap'ing stage 2"
 	sudo chroot $FAKEROOT /bin/bash -c '/debootstrap/debootstrap --second-stage'
@@ -92,6 +99,7 @@ make_format() {
 
 	unmount_chroot_env
 
-	packages_install
-	
+	chroot_install
+
+	echo "*********************** Image created"
 }

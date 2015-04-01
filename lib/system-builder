@@ -64,10 +64,19 @@ echo ff02::2     ip6-allrouters >> /etc/hosts
 
 echo "*********************** Installing Kernel"
 dpkg -i /tmp/*.deb
-cd /usr/src/linux-headers-4.0.0-rc4-lime2 && make scripts
+echo "*********************** Building Kernel Scripts"
+cd /usr/src/linux-headers-4.0.0-rc5-lime2 && make scripts
 
+rm -rf /boot/dtb/4.0.0-rc5-lime2.old #Created in  make scripts above
+
+echo "*********************** Building Boot.scr"
+mv /tmp/boot-next.cmd /boot
+mkimage -C none -A arm -T script -d /boot/boot-next.cmd /boot/boot.scr
+
+echo "*********************** Unpacking Firmware binary blobs"
+unzip /tmp/firmware.zip -d /lib/firmware
 
 echo "*********************** configuring Autoload modules"
 echo 'hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i' > /etc/modules
 
-
+echo "*********************** Chroot all done!"
