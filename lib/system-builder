@@ -2,6 +2,17 @@
 
 echo "*********************** In chroot running system-builder"
 
+cat <<EOF > /mnt/etc/apt/preferences.d/experimental
+Package: *
+Pin: release o=Debian,a=unstable
+Pin-Priority: 150
+
+Package: *
+Pin: release a=experimental
+Pin-Priority: -10
+EOF
+
+
 echo "*********************** apt-get update"
 apt-get -y update
 [ ! $? -eq 0 ] && echo "Unable to get updates" && exit
@@ -35,7 +46,7 @@ locale-gen en_US.UTF-8
 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive  LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_MESSAGES=POSIX update-locale
 
 echo "*********************** Installing Some other packages"
-apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server ntp
+apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server ntp firmware-linux crony sunxi-tools flash-kernel u-boot u-boot-tools
 [ ! $? -eq 0 ] && echo "Unable to install base software set" && exit
 
 echo "*********************** Setting Timezone to UTC"
@@ -65,19 +76,19 @@ echo ff02::1     ip6-allnodes >> /etc/hosts
 echo ff02::2     ip6-allrouters >> /etc/hosts
 
 
-echo "*********************** Installing Kernel"
-dpkg -i /tmp/*.deb
-echo "*********************** Building Kernel Scripts"
-cd /usr/src/linux-headers-4.0.0-rc5-lime2 && make scripts
+#echo "*********************** Installing Kernel"
+#dpkg -i /tmp/*.deb
+#echo "*********************** Building Kernel Scripts"
+#cd /usr/src/linux-headers-4.0.0-rc5-lime2 && make scripts
 
-rm -rf /boot/dtb/4.0.0-rc5-lime2.old #Created in  make scripts above
+#rm -rf /boot/dtb/4.0.0-rc5-lime2.old #Created in  make scripts above
 
-echo "*********************** Building Boot.scr"
-mv /tmp/boot-next.cmd /boot
-mkimage -C none -A arm -T script -d /boot/boot-next.cmd /boot/boot.scr
+#echo "*********************** Building Boot.scr"
+#mv /tmp/boot-next.cmd /boot
+#mkimage -C none -A arm -T script -d /boot/boot-next.cmd /boot/boot.scr
 
-echo "*********************** Unpacking Firmware binary blobs"
-unzip /tmp/firmware.zip -d /lib/firmware
+#echo "*********************** Unpacking Firmware binary blobs"
+#unzip /tmp/firmware.zip -d /lib/firmware
 
 echo "*********************** configuring Autoload modules"
 echo 'hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i' > /etc/modules

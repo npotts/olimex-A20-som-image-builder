@@ -16,4 +16,5 @@ prep #setup needed output folder, etc
 #build_sunxitools
 #build_linux_mainline
 #mount_chroot_env
-make_rootfs
+#make_rootfs
+chroot_install

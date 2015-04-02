@@ -27,3 +27,9 @@ deb-src http://security.debian.org/ testing/updates main contrib non-free
 # testing-updates, previously known as 'volatile'
 deb http://ftp.debian.org/debian/ testing-updates main contrib non-free
 deb-src http://ftp.debian.org/debian/ testing-updates main contrib non-free
+
+deb http://ftp.debian.org/debian/ unstable main non-free contrib
+deb-src http://ftp.debian.org/debian/ unstable main non-free contrib
+
+deb http://ftp.debian.org/debian/ experimental main non-free contrib
+deb-src http://ftp.debian.org/debian/ experimental main non-free contrib
