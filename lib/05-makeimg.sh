@@ -118,7 +118,7 @@ make_rootfs() {
 	#sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
 	sudo losetup /dev/loop0 $ROOT_IMG
 	sync
-	sudo mkfs.ext4 /dev/loop0
+	sudo mkfs.ext4 -FF /dev/loop0
 	#tuning so that if you power off before write occurs, you may end up with old data rather than corrupt data
 	sudo tune2fs -o journal_data_writeback /dev/loop0
 	sudo e2label /dev/loop0 a20som
