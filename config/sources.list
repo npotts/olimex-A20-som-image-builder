@@ -1,22 +1,4 @@
-
-
-deb http://ftp.us.debian.org/debian unstable main contrib non-free
-deb-src http://ftp.us.debian.org/debian unstable main contrib non-free
-
-deb http://ftp.us.debian.org/debian/ jessie-updates main contrib non-free
-deb-src http://ftp.us.debian.org/debian/ jessie-updates main contrib non-free
-
-deb http://security.debian.org/ jessie/updates main contrib non-free
-deb-src http://security.debian.org/ jessie/updates main contrib non-free
-
-deb http://ftp.us.debian.org/debian stable main contrib non-free
-deb-src http://ftp.us.debian.org/debian stable main contrib non-free
-
-deb http://ftp.us.debian.org/debian/ wheezy-updates main contrib non-free
-deb-src http://ftp.us.debian.org/debian/ wheezy-updates main contrib non-free
-
-deb http://security.debian.org/ wheezy/updates main contrib non-free
-deb-src http://security.debian.org/ wheezy/updates main contrib non-free
+#From http://linux-sunxi.org/Mainline_Debian_HowTo
 
 deb http://ftp.debian.org/debian/ testing main non-free contrib
 deb-src http://ftp.debian.org/debian/ testing main non-free contrib
@@ -28,8 +10,21 @@ deb-src http://security.debian.org/ testing/updates main contrib non-free
 deb http://ftp.debian.org/debian/ testing-updates main contrib non-free
 deb-src http://ftp.debian.org/debian/ testing-updates main contrib non-free
 
+
 deb http://ftp.debian.org/debian/ unstable main non-free contrib
 deb-src http://ftp.debian.org/debian/ unstable main non-free contrib
 
 deb http://ftp.debian.org/debian/ experimental main non-free contrib
 deb-src http://ftp.debian.org/debian/ experimental main non-free contrib
+
+
+#taken from https://raymii.org/s/articles/Olimex_OlinuXino_A20_Lime2_Kernel_3.19_uBoot_Debian_7_image_building.html
+
+deb http://ftp.us.debian.org/debian stable main contrib non-free
+deb-src http://ftp.us.debian.org/debian stable main contrib non-free
+
+deb http://ftp.us.debian.org/debian/ wheezy-updates main contrib non-free
+deb-src http://ftp.us.debian.org/debian/ wheezy-updates main contrib non-free
+
+deb http://security.debian.org/ wheezy/updates main contrib non-free
+deb-src http://security.debian.org/ wheezy/updates main contrib non-free

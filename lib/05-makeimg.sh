@@ -57,9 +57,13 @@ chroot_install() {
 
 	mount_chroot_env
 
-	echo "*********************** Creating default source list"
+	echo "*********************** Moving files into the chroot"
 	sudo cp config/sources.list $FAKEROOT/etc/apt/sources.list
 	[ ! $? -eq 0 ] && echo "Unable to copy sources.list to final location" && exit
+	sudo cp config/experimental /etc/apt/preferences.d/
+	[ ! $? -eq 0 ] && echo "Unable to copy experimental to final location" && exit
+	sudo cp config/kernel-cmdline.txt /etc/default/flash-kernel
+	[ ! $? -eq 0 ] && echo "Unable to copy flash-kernel default command line to final location" && exit
 
 	echo "*********************** Creating SSH Keys if needed "
 	echo "*********************** If you want to use pre-made keys, place them in $OUTPUT_DIR/ssh_[r|d|ecd]sa]_key"
@@ -94,16 +98,24 @@ make_rootfs() {
   	sync
   	echo "*********************** Creating image file"
 	dd if=/dev/zero of=$ROOT_IMG bs=1M count=2000 status=noxfer
+	[ ! $? -eq 0 ] && echo "Unable to create image file" && exit
 
 	#two EXT4 mounts
 	echo "*********************** Partitioning"
-	sudo losetup /dev/loop0 $ROOT_IMG
+	sudo losetup /dev/loop0 $ROOT_IMG 
+	[ ! $? -eq 0 ] && echo "Unable to mount as loopback fs" && exit
 	sudo parted -s /dev/loop0 -- mklabel msdos
+	[ ! $? -eq 0 ] && echo "Unable to set disk label" && exit
 	sudo parted -s /dev/loop0 -- mkpart primary ext4 2048s -1s
+	[ ! $? -eq 0 ] && echo "Unable to create file system" && exit
 	sudo partprobe /dev/loop0 #update part table
+	[ ! $? -eq 0 ] && echo "Unable to update partition table" && exit
+	dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=/dev/loop0 bs=1024 seek=8
+	[ ! $? -eq 0 ] && echo "Unable to burn bootloader to image" && exit
 	sudo losetup -d /dev/loop0
+	[ ! $? -eq 0 ] && echo "Unable to dislodge disk image via losetup" && exit
 
-	#remount to new part table
+	#remount directly on top of the start of the partition 1048576 = 512(bytes) * 2048sectors
 	sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
 	sudo mkfs.ext4 /dev/loop0
 	#tuning so that if you power off before write occurs, you may end up with old data rather than corrupt data
@@ -112,7 +124,7 @@ make_rootfs() {
 	sudo mount -t ext4 /dev/loop0 $FAKEROOT
 
 	echo "*********************** debootstrap'ing stage 1"
-	sudo debootstrap --include=openssh-server,debconf-utils,tmux,zsh,vim,ser2net,nmap,socat --arch=armhf --foreign jessie $OUTPUT_DIR/sdcard
+	sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C debootstrap --include=linux-image-armmp-lpae,openssh-server,debconf-utils,tmux,zsh,vim,ser2net,nmap,socat --arch=armhf --foreign jessie $OUTPUT_DIR/sdcard
 
 	#copy qemu binary debian style
 	sudo cp /usr/bin/qemu-arm-static $FAKEROOT/usr/bin/
@@ -122,15 +134,9 @@ make_rootfs() {
 	sudo umount /dev/loop0
 	sudo losetup -d /dev/loop0
 
-	echo "*********************** Installing u-boot at the bootloader"
-	sudo losetup /dev/loop0 $ROOT_IMG
-	sudo dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=/dev/loop0 bs=1024 seek=8 status=noxfer
-	sudo losetup -d /dev/loop0
-
-	mount_chroot_env
+	mount_chroot_env #use normal way ot accessing chroot with all the other mounts
 	echo "*********************** debootstrap'ing stage 2"
 	sudo chroot $FAKEROOT /bin/bash -c '/debootstrap/debootstrap --second-stage'
-
 	unmount_chroot_env
 
 	chroot_install

@@ -2,16 +2,7 @@
 
 echo "*********************** In chroot running system-builder"
 
-cat <<EOF > /mnt/etc/apt/preferences.d/experimental
-Package: *
-Pin: release o=Debian,a=unstable
-Pin-Priority: 150
-
-Package: *
-Pin: release a=experimental
-Pin-Priority: -10
-EOF
-
+echo "Olimex A20-OLinuXino-LIME2" > /mnt/etc/flash-kernel/machine
 
 echo "*********************** apt-get update"
 apt-get -y update
@@ -46,8 +37,10 @@ locale-gen en_US.UTF-8
 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive  LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_MESSAGES=POSIX update-locale
 
 echo "*********************** Installing Some other packages"
-apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server ntp firmware-linux crony sunxi-tools flash-kernel u-boot u-boot-tools
+apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server ntp firmware-linux crony sunxi-tools flash-kernel u-boot u-boot-tools python3-zmq libzmq-dev
 [ ! $? -eq 0 ] && echo "Unable to install base software set" && exit
+apt-get -y -t experimental install linux-image-3.19.0-trunk-armmp-lpae u-boot u-boot-tools
+[ ! $? -eq 0 ] && echo "Unable to install kernel" && exit
 
 echo "*********************** Setting Timezone to UTC"
 cp /usr/share/zoneinfo/UTC /etc/localtime
@@ -59,7 +52,7 @@ echo "*********************** Set password"
 echo "*********************** Set fstab"
 echo '/dev/mmcblk0p1  /           ext4    defaults,noatime,nodiratime,data=writeback,commit=600,errors=remount-ro        0       0' > /etc/fstab
 
-echo "*********************** Enable interupts on core 2"
+echo "*********************** Enable interupts on core 2 which MAKES THE ETHERNET WORK"
 echo 'echo 2 > /proc/irq/\$(cat /proc/interrupts | grep eth0 | cut -f 1 -d ":" | tr -d " ")/smp_affinity' >> /etc/rc.local
 sed -i s/'exit 0'//g /etc/rc.local
 
@@ -76,6 +69,7 @@ echo ff02::1     ip6-allnodes >> /etc/hosts
 echo ff02::2     ip6-allrouters >> /etc/hosts
 
 
+#The blow is not being used currently.  The standard stock kernel is being used for now
 #echo "*********************** Installing Kernel"
 #dpkg -i /tmp/*.deb
 #echo "*********************** Building Kernel Scripts"
@@ -91,6 +85,6 @@ echo ff02::2     ip6-allrouters >> /etc/hosts
 #unzip /tmp/firmware.zip -d /lib/firmware
 
 echo "*********************** configuring Autoload modules"
-echo 'hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i' > /etc/modules
+echo 'hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i rtc_sunxi' > /etc/modules
 
 echo "*********************** Chroot all done!"

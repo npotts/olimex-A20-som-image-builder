@@ -4,3 +4,6 @@
 [submodule "sunxi-tools"]
 	path = sunxi-tools
 	url = https://github.com/linux-sunxi/sunxi-tools.git
+[submodule "u-boot"]
+	path = u-boot
+	url = git://git.denx.de/u-boot.git
