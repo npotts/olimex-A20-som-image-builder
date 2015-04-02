@@ -1,6 +1,7 @@
 mount_chroot_env() {
 	echo "*********************** Mounting chroot"
-	sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
+	#sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
+	sudo losetup /dev/loop0 $ROOT_IMG
 	[ ! $? -eq 0 ] && echo "Unable to setup losetup" && exit 
 	sudo mount -t ext4 /dev/loop0 $FAKEROOT
 	[ ! $? -eq 0 ] && echo "Unable to mount fs" && exit 
@@ -10,9 +11,7 @@ mount_chroot_env() {
 	[ ! $? -eq 0 ] && echo "Unable to mount sys" && exit
 	sudo mount -t devtmpfs dev $FAKEROOT/dev
 	[ ! $? -eq 0 ] && echo "Unable to mount dev" && exit
-	sudo mkdir -p $FAKEROOT/pts
-	[ ! $? -eq 0 ] && echo "Unable to make pts path" && exit
-	sudo mount -t devpts pts $FAKEROOT/pts
+	sudo mount -t devpts pts $FAKEROOT/dev/pts
 	[ ! $? -eq 0 ] && echo "Unable to mount pts" && exit
 	echo "*********************** chroot mounted"
 }
@@ -35,21 +34,21 @@ unmount_chroot_env() {
 	echo "*********************** Unmounting chroot"
 	sudo fuser -k $FAKEROOT/sys
 	sudo fuser -k $FAKEROOT/proc
-	sudo fuser -k $FAKEROOT/pts
+	sudo fuser -k $FAKEROOT/dev/pts
 	sudo fuser -k $FAKEROOT/dev
 	sudo fuser -k $FAKEROOT
 	sudo umount $FAKEROOT/sys
-	[ ! $? -eq 0 ] && echo "Unable to unmount sys" && exit
+	[ ! $? -eq 0 ] && echo "Unable to unmount sys" 
 	sudo umount $FAKEROOT/proc
-	[ ! $? -eq 0 ] && echo "Unable to unmount proc" && exit
-	sudo umount $FAKEROOT/pts
-	[ ! $? -eq 0 ] && echo "Unable to unmount pts" && exit
+	[ ! $? -eq 0 ] && echo "Unable to unmount proc"
+	sudo umount $FAKEROOT/dev/pts
+	[ ! $? -eq 0 ] && echo "Unable to unmount pts"
 	sudo umount $FAKEROOT/dev
-	[ ! $? -eq 0 ] && echo "Unable to unmount dev" && exit
+	[ ! $? -eq 0 ] && echo "Unable to unmount dev"
 	sudo umount /dev/loop0
-	[ ! $? -eq 0 ] && echo "Unable to unmount /dev/loop0" && exit
+	[ ! $? -eq 0 ] && echo "Unable to unmount /dev/loop0"
 	sudo losetup -d /dev/loop0
-	[ ! $? -eq 0 ] && echo "Unable to dislodge /dev/loop0" && exit
+	[ ! $? -eq 0 ] && echo "Unable to dislodge /dev/loop0"
 	echo "*********************** done Unmounting chroot"
 }
 
@@ -74,9 +73,9 @@ chroot_install() {
 	[ ! $? -eq 0 ] && echo "Unable to copy SSH keys properly" && exit
 
 
-	echo "*********************** Copying Needed files to chroot's /tmp"
-	sudo cp -fr $OUTPUT_DIR/*deb config/boot-next.cmd config/firmware.zip $FAKEROOT/tmp
-	[ ! $? -eq 0 ] && echo "Unable to copy needed files to chroot's /tmp" && exit
+	#echo "*********************** Copying Needed files to chroot's /tmp"
+	#sudo cp -fr $OUTPUT_DIR/*deb config/boot-next.cmd config/firmware.zip $FAKEROOT/tmp
+	#[ ! $? -eq 0 ] && echo "Unable to copy needed files to chroot's /tmp" && exit
 
 	echo "*********************** Copying in system-builder script"
 	sudo cp $OUTPUT_DIR/../lib/system-builder $FAKEROOT/tmp
@@ -110,13 +109,15 @@ make_rootfs() {
 	[ ! $? -eq 0 ] && echo "Unable to create file system" && exit
 	sudo partprobe /dev/loop0 #update part table
 	[ ! $? -eq 0 ] && echo "Unable to update partition table" && exit
-	dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=/dev/loop0 bs=1024 seek=8
+	sudo dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=/dev/loop0 bs=1024 seek=8
 	[ ! $? -eq 0 ] && echo "Unable to burn bootloader to image" && exit
 	sudo losetup -d /dev/loop0
 	[ ! $? -eq 0 ] && echo "Unable to dislodge disk image via losetup" && exit
 
 	#remount directly on top of the start of the partition 1048576 = 512(bytes) * 2048sectors
-	sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
+	#sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
+	sudo losetup /dev/loop0 $ROOT_IMG
+	sync
 	sudo mkfs.ext4 /dev/loop0
 	#tuning so that if you power off before write occurs, you may end up with old data rather than corrupt data
 	sudo tune2fs -o journal_data_writeback /dev/loop0

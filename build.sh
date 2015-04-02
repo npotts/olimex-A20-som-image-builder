@@ -12,9 +12,15 @@ done
 prep #setup needed output folder, etc
 
 
-#build_uboot
+build_uboot
+make_rootfs
+#chroot_install
+
+
+
+
 #build_sunxitools
 #build_linux_mainline
 #mount_chroot_env
-#make_rootfs
-chroot_install
+#chroot_install
+#
