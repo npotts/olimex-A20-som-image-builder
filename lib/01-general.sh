@@ -4,7 +4,7 @@ prep() {
 	git submodule init
 	git submodule update
 	echo "*********************** Submodules updated"
-	mkdir -p $OUTPUT_DIR/kernel
-	mkdir -p $OUTPUT_DIR/bin
-	mkdir -p $OUTPUT_DIR/sdcard
+  mkdir -p $OUTPUT_DIR $FAKEROOT
+  touch $ROOT_IMG
+
 }
