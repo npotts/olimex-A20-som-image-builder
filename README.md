@@ -18,10 +18,14 @@ Information was gleaned from the following articles and tutorials
 - uncompressed root image as output
 
 #Usage
+
+- Edit config.sh and then run build.sh
+
 ```sh
 	
 	git clone https://github.com/npotts/olimex-A20-som-image-builder.git
 	cd olimex-A20-som-image-builder
+  vim config.sh
 	./build
 	...
 	#drink some coffee, this can take a bit
