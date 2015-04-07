@@ -2,8 +2,6 @@
 
 echo "*********************** In chroot running system-builder"
 
-echo "Olimex A20-OLinuXino-LIME2" > /mnt/etc/flash-kernel/machine
-
 echo "*********************** apt-get update"
 apt-get -y update
 [ ! $? -eq 0 ] && echo "Unable to get updates" && exit
@@ -37,10 +35,9 @@ locale-gen en_US.UTF-8
 LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive  LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_MESSAGES=POSIX update-locale
 
 echo "*********************** Installing Some other packages"
-apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano ntfs-3g ntp parted pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server ntp firmware-linux crony sunxi-tools flash-kernel u-boot u-boot-tools python3-zmq libzmq-dev
-[ ! $? -eq 0 ] && echo "Unable to install base software set" && exit
-apt-get -y -t experimental install linux-image-3.19.0-trunk-armmp-lpae u-boot u-boot-tools
-[ ! $? -eq 0 ] && echo "Unable to install kernel" && exit
+#Both the following always generate errors beause it is running inside a chroot
+DEBIAN_FRONTEND=noninteractive  apt-get -y install automake bash-completion bc bridge-utils build-essential cmake curl dosfstools evtest figlet fping git haveged hddtemp hdparm htop i2c-tools ifenslave-2.6 iperf ir-keytable iw less libbluetooth-dev libbluetooth3 libtool libwrap0-dev libfuse2 libnl-dev libssl-dev lsof makedev module-init-tools mtp-tools nano pkg-config pciutils pv python-smbus rfkill rsync screen stress sudo sysfsutils toilet u-boot-tools unattended-upgrades unzip usbutils wget zsh vim socat netcat nmap tmux console-setup keyboard-configuration systemd systemd-sysv openssh-server firmware-linux chrony sunxi-tools flash-kernel u-boot u-boot-tools python3-zmq libzmq-dev
+DEBIAN_FRONTEND=noninteractive  apt-get -y -t experimental install linux-image-3.19.0-trunk-armmp-lpae u-boot u-boot-tools
 
 echo "*********************** Setting Timezone to UTC"
 cp /usr/share/zoneinfo/UTC /etc/localtime
@@ -86,5 +83,14 @@ echo ff02::2     ip6-allrouters >> /etc/hosts
 
 echo "*********************** configuring Autoload modules"
 echo 'hci_uart gpio_sunxi rfcomm hidp bonding spi_sun7i rtc_sunxi' > /etc/modules
+
+
+echo 'LINUX_KERNEL_CMDLINE="console=ttyS0,115200 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x1024p60 root=/dev/mmcblk0p1 rootwait panic=10 ${extra}"' >> /etc/default/flash-kernel
+[ ! $? -eq 0 ] && echo "Unable to set flash-kernel command line" && exit
+echo "Olimex A20-OLinuXino-LIME2" > /etc/flash-kernel/machine
+[ ! $? -eq 0 ] && echo "Unable to set flash-kernel machine type" && exit
+flash-kernel
+[ ! $? -eq 0 ] && echo "Unable to set flash-kernel" && exit
+
 
 echo "*********************** Chroot all done!"

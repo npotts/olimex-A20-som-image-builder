@@ -1,7 +1,7 @@
 mount_chroot_env() {
 	echo "*********************** Mounting chroot"
 	#sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
-	sudo losetup /dev/loop0 $ROOT_IMG
+	sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
 	[ ! $? -eq 0 ] && echo "Unable to setup losetup" && exit 
 	sudo mount -t ext4 /dev/loop0 $FAKEROOT
 	[ ! $? -eq 0 ] && echo "Unable to mount fs" && exit 
@@ -98,25 +98,31 @@ make_rootfs() {
   	echo "*********************** Creating image file"
 	dd if=/dev/zero of=$ROOT_IMG bs=1M count=2000 status=noxfer
 	[ ! $? -eq 0 ] && echo "Unable to create image file" && exit
+	
 
 	#two EXT4 mounts
 	echo "*********************** Partitioning"
-	sudo losetup /dev/loop0 $ROOT_IMG 
-	[ ! $? -eq 0 ] && echo "Unable to mount as loopback fs" && exit
-	sudo parted -s /dev/loop0 -- mklabel msdos
-	[ ! $? -eq 0 ] && echo "Unable to set disk label" && exit
-	sudo parted -s /dev/loop0 -- mkpart primary ext4 2048s -1s
-	[ ! $? -eq 0 ] && echo "Unable to create file system" && exit
+	(echo n; echo p; echo 1; echo ; echo ; echo w;) | fdisk $ROOT_IMG 
+
+	dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=$ROOT_IMG bs=1024 seek=8 status=noxfer
+	[ ! $? -eq 0 ] && echo "Unable to burn bootloader to image" && exit
+
+	sudo losetup /dev/loop0 $ROOT_IMG
+	#[ ! $? -eq 0 ] && echo "Unable to mount as loopback fs" && exit
+	#sudo parted -s /dev/loop0 -- mklabel msdos
+	#[ ! $? -eq 0 ] && echo "Unable to set disk label" && exit
+	#sudo parted -s /dev/loop0 -- mkpart primary ext4 2048s -1s
+	#[ ! $? -eq 0 ] && echo "Unable to create file system" && exit
 	sudo partprobe /dev/loop0 #update part table
 	[ ! $? -eq 0 ] && echo "Unable to update partition table" && exit
-	sudo dd if=$OUTPUT_DIR/u-boot-sunxi-with-spl.bin of=/dev/loop0 bs=1024 seek=8
-	[ ! $? -eq 0 ] && echo "Unable to burn bootloader to image" && exit
 	sudo losetup -d /dev/loop0
 	[ ! $? -eq 0 ] && echo "Unable to dislodge disk image via losetup" && exit
 
+
+
 	#remount directly on top of the start of the partition 1048576 = 512(bytes) * 2048sectors
-	#sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
-	sudo losetup /dev/loop0 $ROOT_IMG
+	sudo losetup -o 1048576 /dev/loop0 $ROOT_IMG
+	#sudo losetup /dev/loop0 $ROOT_IMG
 	sync
 	sudo mkfs.ext4 -FF /dev/loop0
 	#tuning so that if you power off before write occurs, you may end up with old data rather than corrupt data
